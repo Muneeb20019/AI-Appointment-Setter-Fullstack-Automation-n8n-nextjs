@@ -1,4 +1,4 @@
-# 🤖 AI Appointment Setter: Enterprise Automation 🚀
+# 🤖 AI Appointment Setter: Full-Stack Automation 🚀
 
 [![Live Demo](https://img.shields.io/badge/demo-online-green.svg?style=for-the-badge)](https://codespaces-nextjs-478wvvn9h-muneebs-projects-405f38bf.vercel.app/)
 [![Vercel](https://img.shields.io/badge/Frontend-Vercel-black?style=for-the-badge)](https://vercel.com)
@@ -11,9 +11,9 @@ An advanced, full-stack AI automation system designed to manage high-volume clie
 ---
 
 ## 🖼️ System Showcase
-| Frontend UI (Dancing Dark Mode) | n8n Logic Architecture |
+| Frontend UI  | Backend n8n Logic System |
 |---|---|
-| ![Frontend Preview](https://github.com/Muneeb20019/codespaces-nextjs/raw/main/website-preview.png) | ![Workflow Architecture](https://github.com/Muneeb20019/codespaces-nextjs/raw/main/n8n-workflow.png) |
+| ![Frontend Preview](https://github.com/Muneeb20019/codespaces-nextjs/blob/main/frontend.png?raw=true) | ![Workflow Architecture](https://github.com/Muneeb20019/codespaces-nextjs/blob/main/AI%20Apointment%20setter%20full%20stack.png?raw=true) |
 
 ---
 
@@ -51,4 +51,5 @@ Instead of a standard "question-answer" bot, this system was engineered for real
 
 ## ✍️ Author
 **Muneeb Ali Khan**  
+*AI Automation Engineer*  
 [GitHub Profile](https://github.com/Muneeb20019) | [LinkedIn Profile](https://linkedin.com/in/yourprofile)
