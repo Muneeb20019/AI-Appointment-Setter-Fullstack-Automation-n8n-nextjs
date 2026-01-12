@@ -1,0 +1,630 @@
+{
+  "name": "AI Appointment setter fullstack",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rave-chat-logic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1792,
+        1312
+      ],
+      "id": "8d724ab7-bf4d-49f6-9154-9955d52ecd87",
+      "name": "Webhook",
+      "webhookId": "ad12fc9c-9e46-4667-a1ac-df972980e659"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Webhook').item.json.body.sessionId }}",
+        "messageData": "={{ $('Webhook').item.json.body.message }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        1280
+      ],
+      "id": "1ccea3c8-6486-4f0f-8232-12c20e7405b3",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "djWyetUDvD75Bryv",
+          "name": "Redis account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pop",
+        "list": "={{ $('Webhook').item.json.body.sessionId }}",
+        "propertyName": "user_messages",
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2448,
+        1280
+      ],
+      "id": "c7c0e7ba-8507-44fe-9a94-3250e655ad02",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "djWyetUDvD75Bryv",
+          "name": "Redis account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Redis1').item.json.user_messages }}",
+        "options": {
+          "systemMessage": "You are a helpful scheduling assistant with access to two tools:\n\n1. check_availability - Use this when users ask about:\n   - Available times or slots\n   - Free appointments\n   - Schedule availability\n   - \"When are you free?\"\n   - \"What times are available?\"\n\n2. book_follow_up - Use this when users ask to:\n   - Set a reminder\n   - Schedule a follow-up\n   - Be contacted later\n   - Remember something\n   - \"Remind me to...\"\n   - \"Follow up about...\"\n\nIMPORTANT RULES:\n- Always use the appropriate tool based on the user's request\n- For reminders, extract the specific reminder content from the user's message\n- After using a tool, confirm the action to the user\n- Be proactive in using tools when the intent is clear",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2608,
+        1280
+      ],
+      "id": "e8d42246-9eb7-433d-aa65-1053461fbc84",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        1504
+      ],
+      "id": "4d0cfce5-e365-469e-b257-bc1568432d77",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "c0VmFeHea2vbJLCQ",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $input.item.json.user_messages }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2704,
+        1680
+      ],
+      "id": "f33028ce-1df1-465d-9cfa-2a131db12c9e",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "GuIfRiGW3QI1Yoo0",
+          "name": "Postgres account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0ef7a0ee-6bef-4f9f-aca2-951b70706709"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f1c5690c-ab0e-4e39-a6b6-4eb6bd983bc1",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e2cb2baa-e20d-4520-aed1-16e432f2929b",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1952,
+        1296
+      ],
+      "id": "11ca2eda-14a6-422b-b5ad-4ba0aba4d311",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        1440
+      ],
+      "id": "0c1ae3c4-47fa-484c-b4dc-e3c9794e9a24",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fx6ISluMTsNty432",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Webhook').item.json.body.sessionId }}",
+        "messageData": "={{ $json.content.parts[0].text }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        1440
+      ],
+      "id": "2072e443-015f-495f-bf0d-537099503a2a",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "djWyetUDvD75Bryv",
+          "name": "Redis account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "models/gemini-2.5-flash"
+        },
+        "inputType": "binary",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        1680
+      ],
+      "id": "8d0d7215-9d5d-4f63-99b3-4f040588f1c8",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Fx6ISluMTsNty432",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Webhook').item.json.body.sessionId }}",
+        "messageData": "={{ $json.content.parts[0].text }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        1680
+      ],
+      "id": "e5a52819-f61d-4d51-9423-838c0cb9175f",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "djWyetUDvD75Bryv",
+          "name": "Redis account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the AI output from the previous node\nconst aiOutput = $json.output || \"\";\n\n// Split the text by the ||| delimiter and clean up extra spaces\nconst splitMessages = aiOutput.split('|||').map(msg => msg.trim()).filter(msg => msg.length > 0);\n\n// Return the list of messages as an array\nreturn {\n  responses: splitMessages\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2896,
+        1280
+      ],
+      "id": "114b7d3c-d3ae-4f09-9731-71e512e32980",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3104,
+        1280
+      ],
+      "id": "6d56012f-2271-4fe7-87fe-ce80df697579",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to save a follow-up reminder when the user asks to be reminded about something or wants to schedule a follow-up. Extract the reminder content from the user message.",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "follow_ups",
+          "mode": "list",
+          "cachedResultName": "follow_ups"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message": "={{ $fromAI('reminder_message', 'The specific content or topic the user wants to be reminded about', 'string') }}",
+            "scheduled_time": "={{ $now }}",
+            "session_id": "={{ $('Webhook').item.json.body.sessionId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scheduled_time",
+              "displayName": "scheduled_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent",
+              "displayName": "sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        2816,
+        1552
+      ],
+      "id": "e773108b-5185-46b1-8c0d-0991b2b89839",
+      "name": "book_follow_up",
+      "credentials": {
+        "postgres": {
+          "id": "GuIfRiGW3QI1Yoo0",
+          "name": "Postgres account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use this tool when the user asks about available appointment slots, free times, or schedule availability. Returns a list of available time slots.",
+        "jsCode": "return 'The following slots are available: Monday at 10:00 AM, Tuesday at 2:00 PM, and Friday at 4:00 PM.';"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        2960,
+        1568
+      ],
+      "id": "551edeac-5e4c-4e75-b1cf-de8a0e8f72c0",
+      "name": "check_availability"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "book_follow_up": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "check_availability": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "05ce5b41-d052-4e61-a72f-b656055cdb84",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ea562c271415baed27d68bbf768d83fb8b2c5d026cf5ace68ae79365f4ebc6f1"
+  },
+  "id": "STtJs0mwcLrwbfnT0fHiM",
+  "tags": []
+}
