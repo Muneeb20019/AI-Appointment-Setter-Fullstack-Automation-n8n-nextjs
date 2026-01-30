@@ -24,14 +24,14 @@ export default function Home() {
     if (type === "text") {
       formData.append("message", data);
     } else if (type === "audio") {
-      // FIX: We explicitly name it 'speech.webm' so n8n/Gemini recognizes it as audio
       formData.append("file", data, "speech.webm");
     } else {
       formData.append("file", data, "image.png");
     }
 
     try {
-      const response = await fetch("https://muneeb0.app.n8n.cloud/webhook-test/rave-chat-logic", {
+      // UPDATED: Now pointing to your new muneeb987 workspace
+      const response = await fetch("https://muneeb987.app.n8n.cloud/webhook-test/rave-chat-logic", {
         method: "POST",
         body: formData,
       });
@@ -58,7 +58,6 @@ export default function Home() {
     } else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Use standard webm format for Chrome/Chromebook
         mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
         audioChunks.current = [];
 
